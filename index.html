@@ -1,0 +1,864 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Central Walkie - 4 Canales (Colores Originales)</title>
+    <style>
+        * {
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+            box-sizing: border-box;
+        }
+        body {
+            margin: 0;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #0a0a0f, #1a1a2e);
+            font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+            padding: 20px;
+        }
+        
+        .walkies-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+        
+        .walkie {
+            background: #2c2c3e;
+            border-radius: 45px;
+            padding: 25px;
+            box-shadow: 0 20px 40px rgba(0,0,0,.5);
+            height: auto;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        
+        .walkie::-webkit-scrollbar {
+            width: 6px;
+        }
+        .walkie::-webkit-scrollbar-track {
+            background: #1e1e2a;
+            border-radius: 10px;
+        }
+        .walkie::-webkit-scrollbar-thumb {
+            background: #2ed573;
+            border-radius: 10px;
+        }
+        
+        .walkie-header h1 {
+            text-align: center;
+            color: #ff6b6b;
+            margin: 0;
+            font-size: 1.5rem;
+        }
+        .walkie-header .subtitle {
+            text-align: center;
+            color: #2ed573;
+            font-size: 0.85rem;
+            margin-bottom: 20px;
+        }
+        
+        .hablando-indicador {
+            background: #0a0a0f;
+            border-radius: 12px;
+            padding: 8px;
+            margin-bottom: 15px;
+            text-align: center;
+            font-size: 0.85rem;
+        }
+        .hablando-off { color: #888; }
+        .hablando-on { color: #ff4757; animation: pulse 1s infinite; }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        
+        .selector-panel {
+            background: #0a0a0f;
+            border-radius: 18px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+        .selector-title {
+            color: #888;
+            font-size: 0.85rem;
+            text-align: center;
+            margin-bottom: 12px;
+        }
+        .user-buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+        }
+        .user-btn {
+            flex: 1;
+            padding: 15px;
+            border: 2px solid #2ed573;
+            background: transparent;
+            border-radius: 25px;
+            color: white;
+            font-weight: bold;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: center;
+        }
+        .user-btn.selected {
+            background: #2ed573;
+            color: #0a0a0f;
+            box-shadow: 0 0 15px #2ed573;
+        }
+        .user-btn:active {
+            transform: scale(0.97);
+        }
+        
+        .ids-panel {
+            background: #0a0a0f;
+            border-radius: 18px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+        .id-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 0.9rem;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .id-label {
+            color: #888;
+        }
+        .id-value {
+            color: #2ed573;
+            font-family: monospace;
+            font-weight: bold;
+            font-size: 1rem;
+        }
+        
+        .auto-status {
+            background: #1e1e2a;
+            border-radius: 12px;
+            padding: 10px;
+            margin-bottom: 15px;
+            font-size: 0.8rem;
+            text-align: center;
+            color: #888;
+        }
+        .auto-status span {
+            color: #2ed573;
+            font-weight: bold;
+        }
+        .keep-alive-badge {
+            background: #2ed57333;
+            border-radius: 20px;
+            padding: 3px 10px;
+            font-size: 0.65rem;
+            display: inline-block;
+            margin-top: 5px;
+            color: #2ed573;
+        }
+        
+        .walkies-mini {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        .walkie-card {
+            flex: 1;
+            text-align: center;
+            padding: 15px;
+            background: #1e1e2a;
+            border-radius: 25px;
+            border: 2px solid transparent;
+            transition: all .2s;
+        }
+        .walkie-card.selected {
+            border-color: #2ed573;
+            background: #2ed57322;
+        }
+        .walkie-num {
+            font-size: 1.1rem;
+            font-weight: bold;
+            color: white;
+        }
+        .walkie-status {
+            font-size: 0.7rem;
+            margin-top: 5px;
+            color: #aaa;
+        }
+        .walkie-id-peque {
+            font-size: 0.75rem;
+            color: #2ed573;
+            margin-top: 5px;
+            font-weight: bold;
+            word-break: break-all;
+        }
+        
+        /* BOTONERA - COLORES ORIGINALES CORREGIDOS */
+        .botonera {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        .botonera button {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 14px;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.1s;
+            font-size: 0.85rem;
+        }
+        .botonera button:active {
+            transform: scale(.97);
+        }
+        /* Colores específicos para cada botón */
+        .modo-btn {
+            background: #2ed573 !important;
+        }
+        .limpiar-btn {
+            background: #e74c3c !important;
+        }
+        .llamar-btn {
+            background: #9b59b6 !important;
+        }
+        .manoslibres-btn {
+            background: #3498db !important;
+        }
+        .manoslibres-btn.activo {
+            background: #2ed573 !important;
+            box-shadow: 0 0 10px #2ed573;
+        }
+        
+        .ptt-btn {
+            width: 140px;
+            height: 140px;
+            border-radius: 50%;
+            background: radial-gradient(#34495e, #2c3e50);
+            border: 5px solid #ecf0f1;
+            cursor: pointer;
+            margin: 20px auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            font-size: 0.85rem;
+            font-weight: bold;
+            color: white;
+            text-align: center;
+            transition: transform 0.05s linear;
+        }
+        .ptt-btn:active {
+            transform: scale(.96);
+        }
+        .ptt-btn.disabled {
+            opacity: 0.4;
+            pointer-events: none;
+        }
+        
+        .chat-area {
+            margin-top: 20px;
+            border-top: 1px solid #2c2c3e;
+            padding-top: 15px;
+        }
+        .chat-header {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+        .chat-header button {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            border-radius: 12px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all .2s;
+            font-size: 0.8rem;
+        }
+        .btn-voz-activo {
+            background: #2ed573;
+            color: white;
+        }
+        .btn-texto-activo {
+            background: #ffa502;
+            color: white;
+        }
+        .chat-mensajes {
+            background: #0a0a0f;
+            border-radius: 18px;
+            padding: 12px;
+            height: 120px;
+            overflow-y: auto;
+            font-size: 0.8rem;
+        }
+        .mensaje-propio {
+            text-align: right;
+            margin: 5px 0;
+            color: #2ed573;
+        }
+        .mensaje-otro {
+            text-align: left;
+            margin: 5px 0;
+            color: #ffa502;
+        }
+        .mensaje-nombre {
+            font-weight: bold;
+            font-size: 0.7rem;
+        }
+        
+        .input-texto {
+            display: flex;
+            gap: 10px;
+            margin-top: 12px;
+        }
+        .input-texto input {
+            flex: 1;
+            padding: 12px;
+            border-radius: 25px;
+            border: none;
+            background: #1e1e2a;
+            color: white;
+            font-size: 0.85rem;
+        }
+        .input-texto input:focus {
+            outline: none;
+            border: 1px solid #2ed573;
+        }
+        .input-texto button {
+            background: #2ed573;
+            border: none;
+            border-radius: 25px;
+            padding: 0 20px;
+            color: #0a0a0f;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 0.8rem;
+        }
+        
+        .estado {
+            text-align: center;
+            margin-top: 12px;
+            padding: 10px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+        }
+        .verde {
+            background: #2ed57322;
+            color: #2ed573;
+        }
+        .rojo {
+            background: #ff475722;
+            color: #ff4757;
+        }
+        .amarillo {
+            background: #ffa50222;
+            color: #ffa502;
+        }
+        
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #2ed573;
+            color: #0a0a0f;
+            padding: 8px 16px;
+            border-radius: 35px;
+            font-size: 0.8rem;
+            z-index: 1000;
+            font-weight: bold;
+            pointer-events: none;
+        }
+        
+        @media (max-width: 1000px) {
+            .walkies-grid {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+            .walkie {
+                max-height: none;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="walkies-grid" id="walkiesGrid"></div>
+
+<script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+<script>
+(function(){
+    const ICE_SERVERS = {
+        iceServers: [
+            { urls: 'stun:stun.l.google.com:19302' },
+            { urls: 'stun:stun1.l.google.com:19302' },
+            { urls: 'stun:stun2.l.google.com:19302' },
+            { urls: 'stun:stun3.l.google.com:19302' },
+            { urls: 'stun:stun4.l.google.com:19302' },
+            { urls: 'stun:stun.cloudflare.com:3478' },
+            { urls: 'turn:openrelay.metered.ca:80', username: 'openrelayproject', credential: 'openrelayproject' },
+            { urls: 'turn:openrelay.metered.ca:443', username: 'openrelayproject', credential: 'openrelayproject' },
+            { urls: 'turn:openrelay.metered.ca:3478', username: 'openrelayproject', credential: 'openrelayproject' }
+        ],
+        iceCandidatePoolSize: 10,
+        iceTransportPolicy: 'all'
+    };
+    const PEER_CONFIG = { host: '0.peerjs.com', port: 443, secure: true, config: ICE_SERVERS, debug: 0 };
+
+    const canales = [
+        { id: 0, nombre: "CANAL 1", userA: "moncho", userB: "luci", nombreA: "moncho", nombreB: "luci" },
+        { id: 1, nombre: "CANAL 2", userA: "MONCHO", userB: "diana", nombreA: "MONCHO", nombreB: "diana" },
+        { id: 2, nombre: "CANAL 3", userA: "MoNCHo", userB: "jorge", nombreA: "MoNCHo", nombreB: "jorge" },
+        { id: 3, nombre: "CANAL 4", userA: "user1", userB: "user2", nombreA: "user1", nombreB: "user2" }
+    ];
+
+    let instancias = [];
+
+    class WalkieInstance {
+        constructor(canal) {
+            this.canal = canal;
+            this.idx = canal.id;
+            this.userAId = canal.userA;
+            this.userBId = canal.userB;
+            this.nombreA = canal.nombreA;
+            this.nombreB = canal.nombreB;
+            this.miId = "";
+            this.idDestino = "";
+            this.peer = null;
+            this.stream = null;
+            this.llamada = null;
+            this.audio = null;
+            this.conectado = false;
+            this.hablando = false;
+            this.dataConnection = null;
+            this.modoActual = "voz";
+            this.manosLibresActivo = false;
+            this.cambioAutomaticoHabilitado = true;
+            this.reconectando = false;
+            this.container = null;
+            this.buildDOM();
+            this.initEventListeners();
+        }
+
+        buildDOM() {
+            const grid = document.getElementById('walkiesGrid');
+            const div = document.createElement('div');
+            div.className = 'walkie';
+            div.id = `walkie${this.idx}`;
+            div.innerHTML = `
+                <div class="walkie-header">
+                    <h1>📞 WALKIE <span style="color:#2ed573">${this.canal.nombre}</span></h1>
+                    <div class="subtitle">${this.userAId} ↔ ${this.userBId}</div>
+                </div>
+                
+                <div class="hablando-indicador" id="indicador${this.idx}">
+                    <span class="hablando-off">🔇 Nadie está hablando</span>
+                </div>
+                
+                <div class="selector-panel">
+                    <div class="selector-title">🎭 ELIGE TU IDENTIDAD:</div>
+                    <div class="user-buttons">
+                        <button class="user-btn user-a">👤 ${this.nombreA}</button>
+                        <button class="user-btn user-b">👥 ${this.nombreB}</button>
+                    </div>
+                </div>
+                
+                <div class="ids-panel">
+                    <div class="id-row"><span class="id-label">🎭 Mi ID (compartir):</span><span class="id-value miId">---</span></div>
+                    <div class="id-row"><span class="id-label">👥 ID del amigo:</span><span class="id-value otroId">---</span></div>
+                </div>
+                
+                <div class="auto-status">
+                    🔄 Mantenimiento automático: <span class="autoStatusText">ACTIVO</span><br>
+                    <span class="keep-alive-badge">🎵 Mantenimiento activo: ON</span>
+                </div>
+                
+                <div class="walkies-mini">
+                    <div class="walkie-card card-mi"><div class="walkie-num">🎭 YO</div><div class="walkie-status status-mi">Esperando...</div><div class="walkie-id-peque miIdPeque">---</div></div>
+                    <div class="walkie-card card-otro"><div class="walkie-num">👥 OTRO</div><div class="walkie-status status-otro">Esperando...</div><div class="walkie-id-peque otroIdPeque">---</div></div>
+                </div>
+                
+                <div class="botonera">
+                    <button class="boton-btn modo-btn">📻 MODO PTT</button>
+                    <button class="boton-btn limpiar-btn">🧹 LIMPIAR MANUAL</button>
+                    <button class="boton-btn llamar-btn">📞 LLAMAR</button>
+                    <button class="boton-btn manoslibres-btn">🔊 MANOS LIBRES</button>
+                </div>
+                
+                <div id="ptt${this.idx}" class="ptt-btn disabled">🎧<br>SELECCIONA<br>TU ID</div>
+                
+                <div class="chat-area">
+                    <div class="chat-header">
+                        <button class="btnVoz btn-voz-activo">🎤 MODO VOZ</button>
+                        <button class="btnTexto">💬 MODO TEXTO</button>
+                    </div>
+                    <div class="panelChat" style="display: none;">
+                        <div class="chat-mensajes chatMsgs"><div style="color:#888;text-align:center;">💬 Los mensajes aparecerán aquí</div></div>
+                        <div class="input-texto"><input type="text" class="msgInput" placeholder="Escribe un mensaje..." autocomplete="off"><button class="enviarBtn">📨 ENVIAR</button></div>
+                    </div>
+                </div>
+                
+                <div class="estado estadoDiv rojo">⚡ Selecciona ${this.nombreA} o ${this.nombreB} para empezar</div>
+            `;
+            grid.appendChild(div);
+            this.container = div;
+            
+            this.miIdSpan = div.querySelector('.miId');
+            this.otroIdSpan = div.querySelector('.otroId');
+            this.miIdPeque = div.querySelector('.miIdPeque');
+            this.otroIdPeque = div.querySelector('.otroIdPeque');
+            this.statusMi = div.querySelector('.status-mi');
+            this.statusOtro = div.querySelector('.status-otro');
+            this.estadoDiv = div.querySelector('.estadoDiv');
+            this.pttBtn = document.getElementById(`ptt${this.idx}`);
+            this.chatMsgs = div.querySelector('.chatMsgs');
+            this.msgInput = div.querySelector('.msgInput');
+            this.panelChat = div.querySelector('.panelChat');
+            this.btnVoz = div.querySelector('.btnVoz');
+            this.btnTexto = div.querySelector('.btnTexto');
+            this.indicadorDiv = div.querySelector(`#indicador${this.idx}`);
+            this.autoStatusSpan = div.querySelector('.autoStatusText');
+            this.modoBtn = div.querySelector('.modo-btn');
+            this.limpiarBtn = div.querySelector('.limpiar-btn');
+            this.llamarBtn = div.querySelector('.llamar-btn');
+            this.manosLibresBtn = div.querySelector('.manoslibres-btn');
+        }
+
+        actualizarIndicador(hablando, quien) {
+            if(!this.indicadorDiv) return;
+            if(hablando) {
+                this.indicadorDiv.innerHTML = `<span class="hablando-on">🎤 ${quien} está hablando 🔴</span>`;
+            } else {
+                this.indicadorDiv.innerHTML = `<span class="hablando-off">🔇 Nadie está hablando</span>`;
+            }
+        }
+
+        mostrarToast(msg) {
+            let toast = document.createElement('div');
+            toast.className = 'toast';
+            toast.textContent = msg;
+            document.body.appendChild(toast);
+            setTimeout(() => toast.remove(), 2500);
+        }
+
+        actualizarUI() {
+            if(this.miIdSpan) this.miIdSpan.innerText = this.miId || "❌";
+            if(this.otroIdSpan) this.otroIdSpan.innerText = this.idDestino || "❌";
+            if(this.miIdPeque) this.miIdPeque.innerText = this.miId || "---";
+            if(this.otroIdPeque) this.otroIdPeque.innerText = this.idDestino || "---";
+            if(this.statusMi) this.statusMi.innerHTML = this.conectado ? '🟢 Conectado' : '🟡 Conectando...';
+            if(this.statusOtro && this.idDestino) this.statusOtro.innerHTML = `🎯 ${this.idDestino}`;
+            
+            const btnA = this.container.querySelector('.user-a');
+            const btnB = this.container.querySelector('.user-b');
+            if(btnA && btnB) {
+                if(this.miId === this.userAId) {
+                    btnA.classList.add('selected');
+                    btnB.classList.remove('selected');
+                } else if(this.miId === this.userBId) {
+                    btnB.classList.add('selected');
+                    btnA.classList.remove('selected');
+                } else {
+                    btnA.classList.remove('selected');
+                    btnB.classList.remove('selected');
+                }
+            }
+        }
+
+        actualizarEstado(texto, tipo) {
+            if(this.estadoDiv) {
+                this.estadoDiv.innerHTML = texto;
+                this.estadoDiv.className = `estadoDiv ${tipo}`;
+            }
+        }
+
+        reproducirSonidoLocal() {
+            try { new Audio('sonido.wav').play().catch(e=>{}); } catch(e){}
+        }
+        reproducirSonidoLlamada() {
+            try { new Audio('sonido2.wav').play().catch(e=>{}); } catch(e){}
+        }
+
+        agregarMensajeChat(remitente, texto, esMio) {
+            if(!this.chatMsgs) return;
+            if(this.chatMsgs.children.length === 1 && this.chatMsgs.children[0].innerText.includes("Los mensajes aparecerán aquí")) {
+                this.chatMsgs.innerHTML = "";
+            }
+            const msgDiv = document.createElement('div');
+            msgDiv.className = esMio ? 'mensaje-propio' : 'mensaje-otro';
+            msgDiv.innerHTML = `<div class="mensaje-nombre">${remitente}:</div><div>${texto}</div>`;
+            this.chatMsgs.appendChild(msgDiv);
+            this.chatMsgs.scrollTop = this.chatMsgs.scrollHeight;
+        }
+
+        enviarEstadoHablando(estado) {
+            if (this.dataConnection && this.dataConnection.open) {
+                this.dataConnection.send({ type: 'hablando', desde: this.miId, estado: estado });
+            }
+        }
+
+        cambiarATextoAutomatico(origen) {
+            if (!this.cambioAutomaticoHabilitado || this.modoActual === "texto") return;
+            this.cambioAutomaticoHabilitado = false;
+            this.modoActual = "texto";
+            this.btnVoz.style.background = '#1e1e2a';
+            this.btnTexto.style.background = '#ffa502';
+            this.pttBtn.style.display = 'none';
+            this.panelChat.style.display = 'block';
+            if (this.hablando && !this.manosLibresActivo) {
+                this.detenerLlamada();
+                this.hablando = false;
+                this.pttBtn.style.background = 'radial-gradient(#34495e,#2c3e50)';
+                this.pttBtn.innerHTML = '🎤<br>MANTÉN PTT';
+                this.enviarEstadoHablando(false);
+            }
+            setTimeout(() => { this.cambioAutomaticoHabilitado = true; }, 500);
+        }
+
+        cambiarAVozManual() {
+            if (this.modoActual === "voz") return;
+            this.modoActual = "voz";
+            this.btnVoz.style.background = '#2ed573';
+            this.btnTexto.style.background = '#1e1e2a';
+            this.pttBtn.style.display = 'flex';
+            this.panelChat.style.display = 'none';
+        }
+
+        async iniciarLlamada() {
+            if(!this.peer || !this.idDestino) return false;
+            if(!this.stream) {
+                try { 
+                    this.stream = await navigator.mediaDevices.getUserMedia({ audio: true }); 
+                    this.stream.getAudioTracks().forEach(t => t.enabled = false); 
+                } catch(e) { 
+                    this.mostrarToast('🎤 Permite el micrófono para usar voz'); 
+                    return false; 
+                }
+            }
+            this.stream.getAudioTracks().forEach(t => t.enabled = true);
+            if(this.llamada) try { this.llamada.close(); } catch(e) {}
+            try {
+                this.llamada = this.peer.call(this.idDestino, this.stream);
+                return true;
+            } catch(e) { return false; }
+        }
+
+        detenerLlamada() { 
+            if(this.stream) this.stream.getAudioTracks().forEach(t => t.enabled = false); 
+            if(this.llamada) { try { this.llamada.close(); } catch(e) {} this.llamada = null; } 
+        }
+
+        enviarMensajeTexto() {
+            const texto = this.msgInput?.value.trim();
+            if(!texto) { this.mostrarToast('📝 Escribe un mensaje'); return; }
+            if(!this.idDestino) { this.mostrarToast('⚠️ Selecciona una identidad primero'); return; }
+            if (this.modoActual !== "texto") this.cambiarATextoAutomatico("Yo");
+            if (this.dataConnection?.open) {
+                this.dataConnection.send({ type: 'texto', desde: this.miId, texto: texto });
+                this.dataConnection.send({ type: 'sonido', desde: this.miId });
+                this.agregarMensajeChat(this.miId, texto, true);
+                this.msgInput.value = '';
+                this.mostrarToast(`📨 Enviado a ${this.idDestino} con sonido`);
+            } else { this.mostrarToast('🔄 Canal no disponible'); }
+        }
+
+        establecerConexionDatos() {
+            if (!this.peer || !this.idDestino) return;
+            if (this.dataConnection?.open) return;
+            try {
+                this.dataConnection = this.peer.connect(this.idDestino, { reliable: true });
+                this.dataConnection.on('open', () => { this.dataConnection.send({ type: 'handshake', desde: this.miId }); });
+                this.dataConnection.on('data', (data) => {
+                    if (data.type === 'texto') {
+                        this.agregarMensajeChat(data.desde, data.texto, false);
+                        if (this.cambioAutomaticoHabilitado && this.modoActual !== "texto") {
+                            this.cambiarATextoAutomatico(data.desde);
+                        }
+                    } else if (data.type === 'sonido') this.reproducirSonidoLocal();
+                    else if (data.type === 'llamada') {
+                        this.mostrarToast(`📞 ${data.desde} te está llamando!`);
+                        this.reproducirSonidoLlamada();
+                    } else if (data.type === 'hablando') this.actualizarIndicador(data.estado, data.desde);
+                });
+                this.dataConnection.on('close', () => { this.dataConnection = null; });
+            } catch(e) {}
+        }
+
+        conectarPeer(miID, otroID) {
+            if(this.reconectando) return;
+            this.reconectando = true;
+            if (this.peer) { try { this.peer.destroy(); } catch(e) {} this.peer = null; }
+            this.miId = miID; this.idDestino = otroID; this.conectado = false; this.hablando = false;
+            this.actualizarUI();
+            this.mostrarToast(`🔌 Conectando como "${miID}"...`);
+            this.actualizarEstado(`🔄 Conectando como "${miID}"...`, 'amarillo');
+            if(this.pttBtn) this.pttBtn.classList.add('disabled');
+            try {
+                this.peer = new Peer(miID, PEER_CONFIG);
+                this.peer.on('open', () => {
+                    this.conectado = true;
+                    this.reconectando = false;
+                    this.actualizarEstado(`✅ Conectado como "${this.miId}"`, 'verde');
+                    if(this.pttBtn) this.pttBtn.classList.remove('disabled');
+                    this.mostrarToast(`✅ Conectado como "${this.miId}"!`);
+                    this.actualizarUI();
+                    this.establecerConexionDatos();
+                });
+                this.peer.on('connection', (conn) => {
+                    if (this.dataConnection) try { this.dataConnection.close(); } catch(e) {}
+                    this.dataConnection = conn;
+                    this.dataConnection.on('open', () => { this.dataConnection.send({ type: 'handshake', desde: this.miId }); });
+                    this.dataConnection.on('data', (data) => {
+                        if (data.type === 'texto') {
+                            this.agregarMensajeChat(data.desde, data.texto, false);
+                            if (this.cambioAutomaticoHabilitado && this.modoActual !== "texto") this.cambiarATextoAutomatico(data.desde);
+                        } else if (data.type === 'sonido') this.reproducirSonidoLocal();
+                        else if (data.type === 'llamada') { this.mostrarToast(`📞 ${data.desde} te llama!`); this.reproducirSonidoLlamada(); }
+                        else if (data.type === 'hablando') this.actualizarIndicador(data.estado, data.desde);
+                    });
+                });
+                this.peer.on('call', (call) => {
+                    if (this.stream) {
+                        call.answer(this.stream);
+                        call.on('stream', (s) => {
+                            if (this.audio) { this.audio.pause(); this.audio.srcObject = null; }
+                            this.audio = new Audio();
+                            this.audio.srcObject = s;
+                            this.audio.autoplay = true;
+                        });
+                    }
+                });
+                this.peer.on('error', (err) => {
+                    this.reconectando = false;
+                    if (err.type === 'unavailable-id') {
+                        this.mostrarToast(`❌ ID "${miID}" ya está en uso`);
+                        this.actualizarEstado(`❌ ID "${miID}" ocupado`, 'rojo');
+                    }
+                });
+                this.peer.on('disconnected', () => { this.conectado = false; if(this.pttBtn) this.pttBtn.classList.add('disabled'); });
+            } catch(e) { this.reconectando = false; }
+        }
+
+        seleccionarUserA() { if(this.miId === this.userAId) { this.mostrarToast(`✅ Ya usas ${this.userAId}`); return; } if(this.peer) this.peer.destroy(); this.conectarPeer(this.userAId, this.userBId); }
+        seleccionarUserB() { if(this.miId === this.userBId) { this.mostrarToast(`✅ Ya usas ${this.userBId}`); return; } if(this.peer) this.peer.destroy(); this.conectarPeer(this.userBId, this.userAId); }
+        
+        limpiar() {
+            if(this.dataConnection) this.dataConnection.close();
+            if(this.llamada) this.llamada.close();
+            if(this.peer) this.peer.destroy();
+            if(this.stream) this.stream.getTracks().forEach(t => t.stop());
+            this.conectado = false; this.hablando = false;
+            this.miId = ""; this.idDestino = "";
+            this.actualizarUI();
+            this.actualizarEstado(`🧹 Limpiado manualmente. Selecciona ${this.nombreA} o ${this.nombreB}`, 'amarillo');
+            if(this.pttBtn) this.pttBtn.classList.add('disabled');
+            this.actualizarIndicador(false, "");
+            this.dataConnection = null; this.peer = null; this.stream = null; this.llamada = null;
+        }
+        
+        toggleManosLibres() {
+            this.manosLibresActivo = !this.manosLibresActivo;
+            if (this.manosLibresActivo) {
+                this.manosLibresBtn.classList.add('activo');
+                this.manosLibresBtn.innerHTML = '🎙️ MANOS LIBRES ON';
+                this.pttBtn.style.opacity = '0.5';
+                this.pttBtn.style.pointerEvents = 'none';
+                if (this.llamada && this.stream) { this.stream.getAudioTracks().forEach(t => t.enabled = true); this.enviarEstadoHablando(true); }
+                else if (this.conectado && this.idDestino) { this.iniciarLlamada().then(() => { if(this.stream) { this.stream.getAudioTracks().forEach(t => t.enabled = true); this.enviarEstadoHablando(true); } }); }
+            } else {
+                this.manosLibresBtn.classList.remove('activo');
+                this.manosLibresBtn.innerHTML = '🔊 MANOS LIBRES';
+                this.pttBtn.style.opacity = '1';
+                this.pttBtn.style.pointerEvents = 'auto';
+                if (this.llamada && this.hablando) { this.detenerLlamada(); this.hablando = false; this.enviarEstadoHablando(false); }
+            }
+        }
+        
+        enviarLlamada() {
+            if (!this.idDestino) { this.mostrarToast('⚠️ Selecciona identidad primero'); return; }
+            if (!this.conectado) { this.mostrarToast('⚠️ Espera a estar conectado'); return; }
+            if (this.dataConnection?.open) {
+                this.dataConnection.send({ type: 'llamada', desde: this.miId });
+                this.reproducirSonidoLlamada();
+                this.mostrarToast(`✅ Notón enviado a ${this.idDestino}`);
+            } else { this.mostrarToast('🔄 Canal no disponible'); }
+        }
+        
+        toggleModo() { 
+            if (this.modoActual === "voz") {
+                this.cambiarAVozManual();
+            } else {
+                this.cambiarAVozManual();
+            }
+        }
+
+        initEventListeners() {
+            const btnA = this.container.querySelector('.user-a');
+            const btnB = this.container.querySelector('.user-b');
+            const btnVoz = this.container.querySelector('.btnVoz');
+            const btnTexto = this.container.querySelector('.btnTexto');
+            const enviarBtn = this.container.querySelector('.enviarBtn');
+            
+            btnA.onclick = () => this.seleccionarUserA();
+            btnB.onclick = () => this.seleccionarUserB();
+            this.modoBtn.onclick = () => this.toggleModo();
+            this.limpiarBtn.onclick = () => this.limpiar();
+            this.llamarBtn.onclick = () => this.enviarLlamada();
+            this.manosLibresBtn.onclick = () => this.toggleManosLibres();
+            enviarBtn.onclick = () => this.enviarMensajeTexto();
+            this.msgInput.onkeypress = (e) => { if (e.key === 'Enter') this.enviarMensajeTexto(); };
+            btnVoz.onclick = () => this.cambiarAVozManual();
+            btnTexto.onclick = () => this.cambiarATextoAutomatico("Manual");
+            
+            let isPressed = false;
+            const startTalk = async () => {
+                if (this.manosLibresActivo) return;
+                if (!this.conectado) { this.mostrarToast('⚠️ Espera a estar conectado'); return; }
+                if (!this.hablando && !isPressed) {
+                    isPressed = true;
+                    if(await this.iniciarLlamada()) {
+                        this.hablando = true;
+                        this.pttBtn.style.background = 'radial-gradient(#ff4757,#c0392b)';
+                        this.pttBtn.innerHTML = '🎤<br>HABLANDO';
+                        this.enviarEstadoHablando(true);
+                    } else isPressed = false;
+                }
+            };
+            const stopTalk = () => {
+                if (this.manosLibresActivo) return;
+                if (this.hablando && isPressed) {
+                    this.detenerLlamada();
+                    this.hablando = false;
+                    this.pttBtn.style.background = 'radial-gradient(#34495e,#2c3e50)';
+                    this.pttBtn.innerHTML = '🎤<br>MANTÉN PTT';
+                    this.enviarEstadoHablando(false);
+                }
+                isPressed = false;
+            };
+            this.pttBtn.onmousedown = startTalk;
+            this.pttBtn.onmouseup = stopTalk;
+            this.pttBtn.onmouseleave = stopTalk;
+            this.pttBtn.ontouchstart = (e) => { e.preventDefault(); startTalk(); };
+            this.pttBtn.ontouchend = (e) => { e.preventDefault(); stopTalk(); };
+        }
+    }
+
+    for(let c of canales) {
+        instancias.push(new WalkieInstance(c));
+    }
+
+    async function preloadMic() {
+        try { await navigator.mediaDevices.getUserMedia({ audio: true }); } catch(e) {}
+    }
+    preloadMic();
+})();
+</script>
+</body>
+</html>
